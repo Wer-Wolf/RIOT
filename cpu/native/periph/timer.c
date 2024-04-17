@@ -49,6 +49,7 @@ static void *_cb_arg;
 
 static struct itimerspec its;
 
+static bool itimer_initialized = false;
 static timer_t itimer_monotonic;
 
 /**
@@ -104,6 +105,13 @@ int timer_init(tim_t dev, uint32_t freq, timer_cb_t cb, void *arg)
         return -1;
     }
 
+    if (itimer_initialized) {
+        timer_delete(itimer_monotonic);
+        unregister_interrupt(SIGALRM);
+
+        itimer_initialized = false;
+    }
+
     /* initialize time delta */
     time_null = 0;
     time_null = timer_read(0);
@@ -121,6 +129,8 @@ int timer_init(tim_t dev, uint32_t freq, timer_cb_t cb, void *arg)
         timer_delete(itimer_monotonic);
         return -1;
     }
+
+    itimer_initialized = true;
 
     return 0;
 }
